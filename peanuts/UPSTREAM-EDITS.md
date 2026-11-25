@@ -100,6 +100,7 @@ not edited (see table above).
 | `dm/games/01006BB00C6F0000/game.tsv` | **fixed this pass** | no (per-game data row) |
 | `dm/games/01008CF01BAAC000/game.tsv` + `README.md` | **fixed this pass** | no (per-game data row) |
 | `dm/games/0100BA4026E94000/game.tsv` | marked (pre-existing, Castlevania `mem_map_limit off`) | no |
+| `dm/games/01006A800016E000/README.md` | marked (Super Smash Bros. Ultimate, Android notes) | no |
 | `dm/games/010035F022078000/` (new: `game.tsv`, `README.md`, the shader tables) + its row in `dm/games/README.md` | marked (`game.tsv`, the note, the row); tables allow-listed in `peanuts/upstream-unmarked.txt` | could be: Banana Native has no profile for DRAGON BALL: Sparking! ZERO |
 | `dm/games/01006B601380E000/` (new: `game.tsv`, `README.md`, the shader tables) + its row in `dm/games/README.md` | marked (`game.tsv`, the note, the row); tables allow-listed in `peanuts/upstream-unmarked.txt` | could be: Banana Native has no profile for Kirby's Return to Dream Land Deluxe |
 | `dm/games/0100DE501433A000/` (new: `game.tsv`, `README.md`, the shader tables) + its row in `dm/games/README.md` | marked (`game.tsv`, the note, the row); tables allow-listed in `peanuts/upstream-unmarked.txt` | could be: Banana Native has no profile for Tetris Effect: Connected |
