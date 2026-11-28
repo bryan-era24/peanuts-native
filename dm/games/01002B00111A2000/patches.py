@@ -159,6 +159,25 @@ def frame_step(ctx):
                   0x4b11014a),  # sub w10,w10,w17        the frames left, as the original's sub w10,w10,#1 on those updates
                  {0: (16, FS_STATE_OFF)}, 0x857da4)
     fs_put(0x857da0, [B(0x857da0, start)], 'scene timeline frames left: counted once a 1/30 s tick of game time (state +0x14; target 0 = every update)')
+    # PEANUTS: the map's and the HUD's blinking icons (the player arrow, points of interest, a new mission's mark) ran at twice their speed at 60: their layout
+    # animations' frames are set each update from an interface frame counter (main+0xd4b9d0 reads it: its +0x1b4, 20, 22, 24 ... on the Thor), and the update
+    # that owns it (main+0xf87894, after its parts' updates with the update's time in v8) adds 2 a call, the Switch's two 1/60 s frames of a 1/30 s update. It
+    # adds the update's 1/60 s frames (time × 60), the fraction carried in state +0x40: 2 at 1/30 s as on the Switch, at every cap and at target 0. Found with
+    # a probe on the panes' alpha (main+0x18ce46c: 2 of the map's 175 panes changing) and write watches on one's alpha (written by main+0x18d0ca0) and on its
+    # animation (frame set by main+0xd4c864 and main+0xd51a44). x16, x17, s16 and s17 are dead after the calls; the flags are set again by the cmp after it
+    fs_site(0xf87894, '08090011')
+    start = stub((0,            # adrp x16, state
+                  0xbd404210,   # ldr s16,[x16,#0x40]    the fraction of a frame carried
+                  0x52a84e11,   # mov w17,#0x42700000    60.0
+                  0x1e270231,   # fmov s17,w17
+                  0x1f114110,   # fmadd s16,s8,s17,s16   the update's 1/60 s frames and the carry
+                  0x1e390211,   # fcvtzu w17,s16         whole frames
+                  0x1e230231,   # ucvtf s17,w17
+                  0x1e313a10,   # fsub s16,s16,s17
+                  0xbd004210,   # str s16,[x16,#0x40]
+                  0x0b110108),  # add w8,w8,w17          the original's add w8,w8,#2 at 1/30 s
+                 {0: (16, FS_STATE_OFF)}, 0xf87898)
+    fs_put(0xf87894, [B(0xf87894, start)], 'interface frame counter: the update\'s 1/60 s frames, not 2 a call (state +0x40 the fraction)')
 
 FRAME_STEP = {'c3cf52bf2b05d7310884971b50bcccb8': frame_step}
 

@@ -3501,3 +3501,13 @@ Real-time cutscenes ran at twice their speed at the 60 cap: the scene's timeline
 | `dm/games/01002B00111A2000/patches.py` | 3 | `frame_step`: the clock stub's tick count (state +0x18 / +0x1c); the frame task's step flag (+0x14 / +0x15); the frame advance and frames-left stubs at `main+0x857d7c` and `main+0x857da0` | `PEANUTS` |
 | `dm/games/01002B00111A2000/README.md` | 1 | the note's Android section | `PEANUTS` |
 | `dm/tools/tests/test_aoc_fps.py` | 1 | the tick count, the step flag and the frame advance run on ARM64 | `PEANUTS` |
+
+### Hyrule Warriors: Age of Calamity: the interface frame counter counts the update's 1/60 s frames (2026-11-26)
+
+The map's and the HUD's blinking icons ran at twice their speed at the 60 cap: their animations' frames come from an interface counter that added 2 an update. It adds the update's 1/60 s frames (`main+0xf87894`).
+
+| File | Hunks | Change | Marker |
+|---|---|---|---|
+| `dm/games/01002B00111A2000/patches.py` | 1 | `frame_step`: the interface frame counter stub at `main+0xf87894` | `PEANUTS` |
+| `dm/games/01002B00111A2000/README.md` | 1 | the note's Android section | `PEANUTS` |
+| `dm/tools/tests/test_aoc_fps.py` | 1 | the interface frame counter runs on ARM64 | `PEANUTS` |

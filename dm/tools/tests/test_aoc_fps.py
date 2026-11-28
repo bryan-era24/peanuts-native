@@ -27,7 +27,8 @@ DEVICE_PTR, DEVICE_RATE = 0x2bac798, 0x32d0
 BLOCK = 0x269e150
 NTSC = 0x1ef5f3c         # 59.94
 FRAME_ADD, FRAME_NEXT = 0x857d7c, 0x857d80
-LEFT_SUB, LEFT_NEXT = 0x857da0, 0x857da4   # the timeline's frames-left count (sub w10,w10,#1) and the instruction after it   # the scene timeline's frame advance (add w10,w10,#1) and the instruction after it
+LEFT_SUB, LEFT_NEXT = 0x857da0, 0x857da4
+UI_COUNT, UI_COUNT_NEXT, UI_CARRY = 0xf87894, 0xf87898, 0x40   # the interface frame counter's add (add w8,w8,#2), the instruction after it, the state's carry   # the timeline's frames-left count (sub w10,w10,#1) and the instruction after it   # the scene timeline's frame advance (add w10,w10,#1) and the instruction after it
 STEP_FLAG, LAST_TICK = 0x14, 0x15   # state page: scripts step this update, the tick they last stepped in
 TICKS, TICK_FRAC = 0x18, 0x1c   # state page: 1/30 s ticks of game time, and the fraction of one carried
 
@@ -212,7 +213,7 @@ class FrameStep(unittest.TestCase):
     # The scripts and the rest of the scene update run every update: holding the scene update, its script call or the KIDS timeline list task on the other
     # updates left grey frames or characters missing every other frame on the Thor
     def test_scene_update_and_scripts_are_not_held(self):
-        self.assertEqual(self.puts, {0x166dab4, 0x166dc60, 0x8d94b0, FRAME_ADD, LEFT_SUB})
+        self.assertEqual(self.puts, {0x166dab4, 0x166dc60, 0x8d94b0, FRAME_ADD, LEFT_SUB, UI_COUNT})
 
     def frame_advance(self, frame):
         self.u.reg_write(arm.UC_ARM64_REG_X10, frame)
@@ -257,6 +258,28 @@ class FrameStep(unittest.TestCase):
                 for _ in range(ups):
                     self.run_task(); frame = self.frame_advance(frame); left = self.frames_left(left); self.run_clock(1 / ups)
                 self.assertEqual(frame + left, 100)
+
+
+    def ui_counter(self, count, seconds):
+        """The interface frame counter's add (main+0xf87894): w8 the counter, s8 the update's time; the counter after it"""
+        self.u.reg_write(arm.UC_ARM64_REG_X8, count)
+        self.u.reg_write(arm.UC_ARM64_REG_S8, struct.unpack('<I', struct.pack('<f', seconds))[0])
+        self.execute(self.base + UI_COUNT, self.base + UI_COUNT_NEXT)
+        return self.u.reg_read(arm.UC_ARM64_REG_X8) & 0xffffffff
+
+    # The map's and the HUD's blinking icons take their frames from an interface counter that added 2 an update (the Switch's 1/30 s): twice their speed at 60
+    def test_ui_counter_adds_the_updates_frames(self):
+        self.assertEqual(self.ui_counter(20, 1 / 30), 22)   # as on the Switch
+        self.u.mem_write(self.state + UI_CARRY, bytes(4))
+        self.assertEqual(self.ui_counter(20, 1 / 60), 21)
+
+    def test_ui_counter_counts_sixty_a_second(self):
+        for ups in (60, 45, 50, 30):
+            with self.subTest(updates_per_second=ups):
+                self.u.mem_write(self.state + UI_CARRY, bytes(4))
+                count = 0
+                for _ in range(ups): count = self.ui_counter(count, 1 / ups)
+                self.assertIn(count, (59, 60))
 
 if __name__ == '__main__':
     unittest.main()
